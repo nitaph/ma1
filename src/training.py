@@ -1,6 +1,8 @@
 import torch
 from torch.utils.data import DataLoader
 from torch._prims_common import DeviceLikeType
+from torch.optim.lr_scheduler import StepLR
+
 
 
 def fit(
@@ -11,6 +13,7 @@ def fit(
     optimizer: torch.optim.Optimizer,
     criterion: torch.nn.Module,
     num_epochs: int,
+    scheduler: torch.optim.lr_scheduler._LRScheduler = None,
     flatten: bool = True,
 ) -> tuple[torch.nn.Module, dict[str, list]]:
     """
@@ -95,6 +98,11 @@ def fit(
         # Calculate average training loss and accuracy
         train_loss /= len(train_loader.dataset)
         train_accuracy = 100 * correct / total
+         
+        # Updating scheduler only if it's not None
+        if scheduler is not None:
+            scheduler.step()
+
 
         ###################
         # VALIDATION PHASE
@@ -134,7 +142,12 @@ def fit(
         print(
             f"Epoch [{epoch+1}/{num_epochs}]: "
             f"Train Loss: {train_loss:.4f} | Train Accuracy: {train_accuracy:.2f}% | "
-            f"Val Loss: {val_loss:.4f} | Val Accuracy: {val_accuracy:.2f}%"
+            f"Val Loss: {val_loss:.4f} | Val Accuracy: {val_accuracy:.2f}% |"
+            f"Learning Rate: {scheduler.get_last_lr()[0]:.6f}" if scheduler else 
+            
+            f"Epoch [{epoch+1}/{num_epochs}]: "
+            f"Train Loss: {train_loss:.4f} | Train Accuracy: {train_accuracy:.2f}% | "
+            f"Val Loss: {val_loss:.4f} | Val Accuracy: {val_accuracy:.2f}% |"
         )
 
     return model, history
